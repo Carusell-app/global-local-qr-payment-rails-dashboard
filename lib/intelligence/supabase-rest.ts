@@ -5,19 +5,45 @@ type SupabaseConfig = {
   key: string
 }
 
-function getConfig(): SupabaseConfig | undefined {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key =
+function getUrl() {
+  return process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+}
+
+function getReadKey() {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
+
+function getWriteKey() {
+  return (
     process.env.SUPABASE_SERVICE_ROLE_KEY ??
     process.env.SUPABASE_ANON_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  )
+}
+
+function getConfig(key = getWriteKey()): SupabaseConfig | undefined {
+  const url = getUrl()
   if (!url || !key) return undefined
   return { url: url.replace(/\/$/, ""), key }
 }
 
+function getReadConfig(): SupabaseConfig | undefined {
+  return getConfig(getReadKey())
+}
+
+function getWriteConfig(): SupabaseConfig | undefined {
+  return getConfig(getWriteKey())
+}
+
 export function isSupabaseConfigured() {
-  return Boolean(getConfig())
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  return Boolean(url && (getReadKey() || getWriteKey()))
 }
 
 function headers(config: SupabaseConfig, prefer?: string) {
@@ -38,7 +64,7 @@ export function buildQuery(params: Record<string, QueryValue>) {
 }
 
 export async function supabaseSelect<T>(table: string, query = ""): Promise<T[]> {
-  const config = getConfig()
+  const config = getReadConfig()
   if (!config) return []
   const response = await fetch(`${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`, {
     headers: headers(config),
@@ -49,7 +75,7 @@ export async function supabaseSelect<T>(table: string, query = ""): Promise<T[]>
 }
 
 export async function supabaseUpsert<T extends Record<string, unknown>>(table: string, rows: T[], onConflict?: string) {
-  const config = getConfig()
+  const config = getWriteConfig()
   if (!config || rows.length === 0) return []
   const query = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : ""
   const response = await fetch(`${config.url}/rest/v1/${table}${query}`, {
@@ -63,7 +89,7 @@ export async function supabaseUpsert<T extends Record<string, unknown>>(table: s
 }
 
 export async function supabaseInsert<T extends Record<string, unknown>>(table: string, rows: T[], prefer = "return=representation") {
-  const config = getConfig()
+  const config = getWriteConfig()
   if (!config || rows.length === 0) return []
   const response = await fetch(`${config.url}/rest/v1/${table}`, {
     method: "POST",
@@ -76,7 +102,7 @@ export async function supabaseInsert<T extends Record<string, unknown>>(table: s
 }
 
 export async function supabaseRpc<T>(name: string, payload: Record<string, unknown> = {}) {
-  const config = getConfig()
+  const config = getWriteConfig()
   if (!config) return undefined
   const response = await fetch(`${config.url}/rest/v1/rpc/${name}`, {
     method: "POST",
