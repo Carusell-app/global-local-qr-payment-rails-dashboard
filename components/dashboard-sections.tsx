@@ -25,7 +25,7 @@ export function FilterBar({ countries, onChange }: { countries: CountryPaymentPr
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-zinc-500" />
         <h2 className="text-lg font-semibold tracking-tight">Global Filters</h2>
-        <span className="ml-auto rounded-lg bg-zinc-100 px-2.5 py-1 text-xs text-zinc-500">Frontend filters</span>
+        <span className="ml-auto rounded-lg bg-zinc-100 px-2.5 py-1 text-xs text-zinc-500">Client filters</span>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <input

@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation"
-import { countries, getCountryBySlug } from "@/lib/data/countries"
 import { CountryHero, CountryReport } from "@/components/country/country-report"
+import { getCountryBySlug, getCountrySlugs } from "@/lib/intelligence/repository"
 
-export function generateStaticParams() {
-  return countries.map((country) => ({ slug: country.slug }))
+export async function generateStaticParams() {
+  const slugs = await getCountrySlugs()
+  return slugs.map((slug) => ({ slug }))
 }
 
 export default async function CountryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const country = getCountryBySlug(slug)
+  const country = await getCountryBySlug(slug)
   if (!country) notFound()
 
   return (

@@ -77,7 +77,7 @@ export function InteroperabilityMatrix({ countries, corridors }: { countries: Co
             </div>
             <div className="mt-4 flex gap-2">
               <ConfidenceBadge value={corridor.confidence} />
-              <StatusBadge value={corridor.sources.length ? "source placeholder" : "source missing"} />
+              <StatusBadge value={corridor.sources.length ? "evidence linked" : "evidence pending"} />
             </div>
           </article>
         ))}

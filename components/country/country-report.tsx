@@ -39,7 +39,7 @@ export function CountryHero({ country }: { country: CountryPaymentProfile }) {
             </div>
           </div>
           <p className="mt-5 max-w-3xl text-base leading-7 text-zinc-600">
-            {system?.name} operated by {system?.operator ?? "unknown operator"} under {system?.regulator ?? "regulator unknown"}. This is a seed intelligence profile designed for later source-backed ingestion.
+            {system?.name} operated by {system?.operator ?? "unknown operator"} under {system?.regulator ?? "regulator unknown"}. Source and projection status are shown in the data freshness section.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <SeedBadge />
@@ -104,7 +104,7 @@ export function CountrySummary({ country }: { country: CountryPaymentProfile }) 
         {country.countryName} is tracked as a {maturityLabel(system).toLowerCase()} market for {system?.name}. The primary opportunity is shaped by {country.merchantCoverage.level} merchant coverage, {country.interoperability.length} tracked cross-border corridor(s), and a PSP opportunity score of {country.pspOpportunity.opportunityScore}. For PSPs, the main route to market is currently modeled as: {country.pspOpportunity.suggestedRouteToMarket}
       </p>
       <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-        This country report still requires source verification before operational use. Official sources, regulator pages, RSS feeds and analyst validation can be connected through the ingestion layer.
+        Use the data freshness panel and source library to confirm whether this report is running from verified database projections or the legacy seed fallback.
       </p>
     </Section>
   )
@@ -208,7 +208,7 @@ export function ParticipantsTable({ participants }: { participants: Participant[
                 <td className="px-4 py-3 text-zinc-600">{participant.role}</td>
                 <td className="px-4 py-3"><StatusBadge value={participant.accessRoute ?? "unknown"} /></td>
                 <td className="px-4 py-3 text-zinc-600">{participant.capabilities?.join(", ") ?? "unknown"}</td>
-                <td className="px-4 py-3 text-zinc-500">{participant.website ?? "placeholder source"}</td>
+                <td className="px-4 py-3 text-zinc-500">{participant.website ?? "evidence pending"}</td>
                 <td className="px-4 py-3"><ConfidenceBadge value={participant.confidence} /></td>
                 <td className="px-4 py-3 font-mono text-xs text-zinc-500">{participant.lastVerified ?? "unknown"}</td>
               </tr>

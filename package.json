@@ -7,7 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.mjs",
+    "db:migrate": "npx supabase db push",
+    "sources:seed": "node scripts/seed-sources.mjs",
+    "ingest:source": "node scripts/run-cron.mjs ingest-source",
+    "ingest:all": "node scripts/run-cron.mjs ingest",
+    "ingest:priority": "node scripts/run-cron.mjs ingest-priority",
+    "backfill": "node scripts/run-cron.mjs backfill",
+    "projections:rebuild": "node scripts/run-cron.mjs projections",
+    "data:audit": "node scripts/data-quality-audit.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "latest",
