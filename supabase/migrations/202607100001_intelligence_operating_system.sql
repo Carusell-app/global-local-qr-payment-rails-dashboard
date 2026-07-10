@@ -121,7 +121,7 @@ create table if not exists raw_documents (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(excerpt, '') || ' ' || coalesce(clean_text, ''))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (source_id, normalized_url),
@@ -149,7 +149,7 @@ create table if not exists normalized_documents (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(excerpt, '') || ' ' || coalesce(clean_text, ''))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -194,7 +194,7 @@ create table if not exists news_items (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', coalesce(canonical_name, '') || ' ' || coalesce(summary, '') || ' ' || coalesce(business_impact, ''))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -227,7 +227,7 @@ create table if not exists intelligence_events (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', coalesce(canonical_name, '') || ' ' || coalesce(summary, '') || ' ' || coalesce(commercial_impact, ''))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -286,7 +286,7 @@ create table if not exists countries (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || array_to_string(aliases, ' '))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -308,7 +308,7 @@ create table if not exists payment_rails (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || coalesce(operator_name, '') || ' ' || array_to_string(aliases, ' '))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -325,7 +325,7 @@ create table if not exists companies (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || array_to_string(aliases, ' '))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -355,7 +355,7 @@ create table if not exists regulators (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || array_to_string(aliases, ' '))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -381,7 +381,7 @@ create table if not exists corridors (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || array_to_string(rails, ' ') || ' ' || array_to_string(operators, ' '))) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -437,7 +437,7 @@ create table if not exists regulatory_requirements (
   last_verified_at timestamptz,
   review_status text not null default 'pending',
   change_history jsonb not null default '[]'::jsonb,
-  search_tsv tsvector generated always as (to_tsvector('simple', canonical_name || ' ' || summary)) stored,
+  search_tsv tsvector not null default ''::tsvector,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -610,6 +610,31 @@ as $$
   delete from job_leases where job_name = p_job_name;
 $$;
 
+create or replace function update_search_tsv()
+returns trigger
+language plpgsql
+as $$
+begin
+  if TG_TABLE_NAME in ('raw_documents', 'normalized_documents') then
+    new.search_tsv := to_tsvector('simple', coalesce(new.title, '') || ' ' || coalesce(new.excerpt, '') || ' ' || coalesce(new.clean_text, ''));
+  elsif TG_TABLE_NAME = 'news_items' then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || coalesce(new.summary, '') || ' ' || coalesce(new.business_impact, ''));
+  elsif TG_TABLE_NAME = 'intelligence_events' then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || coalesce(new.summary, '') || ' ' || coalesce(new.commercial_impact, ''));
+  elsif TG_TABLE_NAME in ('countries', 'companies', 'regulators') then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || array_to_string(new.aliases, ' '));
+  elsif TG_TABLE_NAME = 'payment_rails' then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || coalesce(new.operator_name, '') || ' ' || array_to_string(new.aliases, ' '));
+  elsif TG_TABLE_NAME = 'corridors' then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || array_to_string(new.rails, ' ') || ' ' || array_to_string(new.operators, ' '));
+  elsif TG_TABLE_NAME = 'regulatory_requirements' then
+    new.search_tsv := to_tsvector('simple', coalesce(new.canonical_name, '') || ' ' || coalesce(new.summary, ''));
+  end if;
+
+  return new;
+end;
+$$;
+
 create index if not exists source_registry_domain_idx on source_registry(domain);
 create index if not exists source_registry_enabled_idx on source_registry(enabled, trust_tier);
 create index if not exists source_fetch_state_next_fetch_idx on source_fetch_state(next_fetch_after);
@@ -664,6 +689,21 @@ begin
   loop
     execute format('drop trigger if exists %I_set_updated_at on %I', table_name, table_name);
     execute format('create trigger %I_set_updated_at before update on %I for each row execute function set_updated_at()', table_name, table_name);
+  end loop;
+end;
+$$;
+
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array[
+    'raw_documents','normalized_documents','news_items','intelligence_events','countries',
+    'payment_rails','companies','regulators','corridors','regulatory_requirements'
+  ]
+  loop
+    execute format('drop trigger if exists %I_update_search_tsv on %I', table_name, table_name);
+    execute format('create trigger %I_update_search_tsv before insert or update on %I for each row execute function update_search_tsv()', table_name, table_name);
   end loop;
 end;
 $$;
