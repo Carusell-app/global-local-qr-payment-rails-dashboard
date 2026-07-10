@@ -2,19 +2,19 @@
   "crons": [
     {
       "path": "/api/cron/ingest?cadence=priority",
-      "schedule": "0 * * * *"
+      "schedule": "0 1 * * *"
     },
     {
       "path": "/api/cron/ingest?cadence=general",
-      "schedule": "15 */6 * * *"
+      "schedule": "15 2 * * *"
     },
     {
       "path": "/api/cron/projections",
-      "schedule": "30 * * * *"
+      "schedule": "30 3 * * *"
     },
     {
       "path": "/api/cron/reconcile",
-      "schedule": "45 2 * * *"
+      "schedule": "45 4 * * *"
     }
   ]
 }
