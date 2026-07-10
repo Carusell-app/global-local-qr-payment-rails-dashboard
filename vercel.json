@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/ingest?cadence=priority",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/ingest?cadence=general",
+      "schedule": "15 */6 * * *"
+    },
+    {
+      "path": "/api/cron/projections",
+      "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/reconcile",
+      "schedule": "45 2 * * *"
+    }
+  ]
+}

@@ -125,6 +125,7 @@ export type IntelligenceEvent = {
   confidenceReasons: string[]
   reviewStatus: ReviewStatus
   evidence: EvidenceReference[]
+  dashboardsUpdated?: string[]
   createdAt: string
 }
 

@@ -41,15 +41,32 @@ export function EventFeed({ events }: { events: IntelligenceEvent[] }) {
           <h3 className="mt-4 text-lg font-semibold tracking-tight">{event.title}</h3>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{event.summary}</p>
           <div className="mt-4 grid gap-2 text-sm text-[var(--text-secondary)]">
+            <p><span className="font-medium text-[var(--text-primary)]">Publisher:</span> {event.evidence[0]?.sourceName ?? "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Publication date:</span> {event.evidence[0]?.publishedAt ? formatDate(event.evidence[0].publishedAt) : "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Event date:</span> {event.eventDate ? formatDate(event.eventDate) : "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Countries:</span> {event.affectedCountries.join(", ") || "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Payment rails:</span> {event.paymentRails.join(", ") || "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Companies:</span> {event.companies.join(", ") || "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Regulators:</span> {event.regulators.join(", ") || "not stated"}</p>
             <p><span className="font-medium text-[var(--text-primary)]">Changed:</span> {event.previousState ?? "unknown"} to {event.newState ?? "signal_detected"}</p>
             <p><span className="font-medium text-[var(--text-primary)]">Business impact:</span> {event.commercialImpact}</p>
             <p><span className="font-medium text-[var(--text-primary)]">BD action:</span> {event.recommendedBdAction}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Confidence explanation:</span> {event.confidenceReasons.join(" ") || "not stated"}</p>
+            <p><span className="font-medium text-[var(--text-primary)]">Dashboards updated:</span> {(event.dashboardsUpdated ?? ["Live Intelligence"]).join(", ")}</p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {event.affectedCountries.map((item) => <StatusBadge key={item} value={item} />)}
             {event.paymentRails.map((item) => <StatusBadge key={item} value={item} />)}
           </div>
-          <p className="mt-3 text-xs text-[var(--text-muted)]">{event.evidence.length} supporting source(s)</p>
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Supporting sources</p>
+            {event.evidence.length ? event.evidence.map((source) => (
+              <a key={`${event.id}-${source.sourceUrl}`} href={source.sourceUrl} target="_blank" rel="noreferrer" className="block rounded-xl bg-[var(--surface-subtle)] px-3 py-2 text-sm text-[var(--brand-primary)]">
+                {source.title || source.sourceName}
+                <span className="block text-xs text-[var(--text-muted)]">{source.sourceUrl}</span>
+              </a>
+            )) : <p className="text-xs text-[var(--text-muted)]">No source evidence attached.</p>}
+          </div>
         </article>
       ))}
     </section>

@@ -19,12 +19,18 @@ function getReadKey() {
 }
 
 function getWriteKey() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   return (
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_ANON_KEY ??
+    (isPlausibleServiceKey(serviceRoleKey) ? serviceRoleKey : undefined) ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    process.env.SUPABASE_ANON_KEY
   )
+}
+
+function isPlausibleServiceKey(value?: string) {
+  if (!value) return false
+  return value.startsWith("eyJ") || value.startsWith("sb_secret_")
 }
 
 function getConfig(key = getWriteKey()): SupabaseConfig | undefined {
